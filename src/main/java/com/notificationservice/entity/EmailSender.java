@@ -1,19 +1,21 @@
 package com.notificationservice.entity;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.notificationservice.converter.JsonNodeConverter;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(name = "email_senders")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmailSender {
+@EqualsAndHashCode(callSuper = true)
+public class EmailSender extends BaseAuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,26 +36,10 @@ public class EmailSender {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "properties", columnDefinition = "jsonb")
+    @Column(name = "properties", columnDefinition = "text")
+    @Convert(converter = JsonNodeConverter.class)
     private JsonNode properties;
 
     @Column(name = "is_active")
     private Boolean isActive = true;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }

@@ -1,10 +1,13 @@
 package com.notificationservice.entity;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.notificationservice.converter.JsonNodeConverter;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
@@ -13,7 +16,8 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class NotificationRequest {
+@EqualsAndHashCode(callSuper = true)
+public class NotificationRequest extends BaseAuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,7 +40,8 @@ public class NotificationRequest {
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "variables", columnDefinition = "jsonb")
+    @Convert(converter = JsonNodeConverter.class)
+    @Column(name = "variables", columnDefinition = "text")
     private JsonNode variables;
 
     @Enumerated(EnumType.STRING)
@@ -48,14 +53,6 @@ public class NotificationRequest {
 
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 
     public enum NotificationStatus {
         PENDING, SENT, FAILED

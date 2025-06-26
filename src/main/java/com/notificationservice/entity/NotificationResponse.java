@@ -1,19 +1,20 @@
 package com.notificationservice.entity;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.notificationservice.converter.JsonNodeConverter;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(name = "notification_responses")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class NotificationResponse {
+@EqualsAndHashCode(callSuper = true)
+public class NotificationResponse extends BaseAuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,14 +30,7 @@ public class NotificationResponse {
     @Column(name = "status", nullable = false)
     private String status;
 
-    @Column(name = "response_data", columnDefinition = "jsonb")
+    @Convert(converter = JsonNodeConverter.class)
+    @Column(name = "response_data", columnDefinition = "text")
     private JsonNode responseData;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 }

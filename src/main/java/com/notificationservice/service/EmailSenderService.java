@@ -76,28 +76,36 @@ public class EmailSenderService {
     }
 
     private EmailSenderDto convertToDto(EmailSender sender) {
-        return new EmailSenderDto(
-                sender.getId(),
-                sender.getName(),
-                sender.getHost(),
-                sender.getPort(),
-                sender.getUsername(),
-                sender.getPassword(),
-                sender.getProperties(),
-                sender.getIsActive());
+        EmailSenderDto dto = new EmailSenderDto();
+        dto.setId(sender.getId());
+        dto.setName(sender.getName());
+        dto.setHost(sender.getHost());
+        dto.setPort(sender.getPort());
+        dto.setUsername(sender.getUsername());
+        dto.setPassword(sender.getPassword());
+        dto.setProperties(sender.getProperties());
+        dto.setIsActive(sender.getIsActive());
+
+        // Set audit fields
+        dto.setCreatedAt(sender.getCreatedAt());
+        dto.setModifiedAt(sender.getModifiedAt());
+        dto.setCreatedBy(sender.getCreatedBy());
+        dto.setModifiedBy(sender.getModifiedBy());
+
+        return dto;
     }
 
     private EmailSender convertToEntity(EmailSenderDto dto) {
-        return new EmailSender(
-                dto.getId(),
-                dto.getName(),
-                dto.getHost(),
-                dto.getPort(),
-                dto.getUsername(),
-                dto.getPassword(),
-                dto.getProperties(),
-                dto.getIsActive(),
-                null,
-                null);
+        EmailSender sender = new EmailSender();
+        sender.setId(dto.getId());
+        sender.setName(dto.getName());
+        sender.setHost(dto.getHost());
+        sender.setPort(dto.getPort());
+        sender.setUsername(dto.getUsername());
+        sender.setPassword(dto.getPassword());
+        sender.setProperties(dto.getProperties());
+        sender.setIsActive(dto.getIsActive());
+
+        return sender;
     }
 }

@@ -104,26 +104,34 @@ public class TemplateService {
     }
 
     private NotificationTemplateDto convertToDto(NotificationTemplate template) {
-        return new NotificationTemplateDto(
-                template.getId(),
-                template.getName(),
-                template.getType(),
-                template.getSubject(),
-                template.getContent(),
-                template.getVariables(),
-                template.getIsActive());
+        NotificationTemplateDto dto = new NotificationTemplateDto();
+        dto.setId(template.getId());
+        dto.setName(template.getName());
+        dto.setType(template.getType());
+        dto.setSubject(template.getSubject());
+        dto.setContent(template.getContent());
+        dto.setVariables(template.getVariables());
+        dto.setIsActive(template.getIsActive());
+
+        // Set audit fields
+        dto.setCreatedAt(template.getCreatedAt());
+        dto.setModifiedAt(template.getModifiedAt());
+        dto.setCreatedBy(template.getCreatedBy());
+        dto.setModifiedBy(template.getModifiedBy());
+
+        return dto;
     }
 
     private NotificationTemplate convertToEntity(NotificationTemplateDto dto) {
-        return new NotificationTemplate(
-                dto.getId(),
-                dto.getName(),
-                dto.getType(),
-                dto.getSubject(),
-                dto.getContent(),
-                dto.getVariables(),
-                dto.getIsActive(),
-                null,
-                null);
+        NotificationTemplate template = new NotificationTemplate();
+        template.setId(dto.getId());
+        template.setName(dto.getName());
+        template.setType(dto.getType());
+        template.setSubject(dto.getSubject());
+        template.setContent(dto.getContent());
+        template.setVariables(dto.getVariables());
+        template.setIsActive(dto.getIsActive());
+
+        return template;
     }
 }

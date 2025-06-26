@@ -1,13 +1,13 @@
 package com.notificationservice.entity;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.notificationservice.converter.JsonNodeConverter;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.hibernate.annotations.Type;
+import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -15,7 +15,8 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class NotificationTemplate {
+@EqualsAndHashCode(callSuper = true)
+public class NotificationTemplate extends BaseAuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,28 +35,12 @@ public class NotificationTemplate {
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "variables", columnDefinition = "jsonb")
+    @Convert(converter = JsonNodeConverter.class)
+    @Column(name = "variables", columnDefinition = "text")
     private JsonNode variables;
 
     @Column(name = "is_active")
     private Boolean isActive = true;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 
     public enum NotificationType {
         EMAIL, WHATSAPP

@@ -7,11 +7,13 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class NotificationTemplateDto {
+@EqualsAndHashCode(callSuper = true)
+public class NotificationTemplateDto extends BaseAuditableDto {
 
     private Long id;
 

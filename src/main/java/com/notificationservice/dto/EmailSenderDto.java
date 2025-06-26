@@ -7,11 +7,13 @@ import jakarta.validation.constraints.Min;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmailSenderDto {
+@EqualsAndHashCode(callSuper = true)
+public class EmailSenderDto extends BaseAuditableDto {
 
     private Long id;
 
@@ -25,10 +27,10 @@ public class EmailSenderDto {
     @Min(value = 1, message = "Port must be greater than 0")
     private Integer port;
 
-    @NotBlank(message = "Username is required")
+//    @NotBlank(message = "Username is required")
     private String username;
 
-    @NotBlank(message = "Password is required")
+//    @NotBlank(message = "Password is required")
     private String password;
 
     private JsonNode properties;

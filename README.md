@@ -11,6 +11,7 @@ A comprehensive Spring Boot notification service that supports email and WhatsAp
 - **Multiple Email Senders**: Configure and use different email providers
 - **RESTful API**: Complete REST API for all operations
 - **Template Processing**: Variable substitution using `{{variable}}` syntax
+- **Audit Trail**: Automatic tracking of who created/modified records and when with user context
 
 ## Technology Stack
 
@@ -22,6 +23,7 @@ A comprehensive Spring Boot notification service that supports email and WhatsAp
 - **Twilio** (WhatsApp messaging)
 - **Lombok**
 - **JPA/Hibernate**
+- **Spring Data JPA Auditing**
 
 ## Prerequisites
 
@@ -94,6 +96,15 @@ The application will start on `http://localhost:8080`
 
 ## API Documentation
 
+### User Context
+
+The service supports user context for audit trails. You can specify the current user in two ways:
+
+1. **HTTP Header**: `X-User: username`
+2. **Query Parameter**: `?user=username`
+
+If no user is specified, the system defaults to "system".
+
 ### Templates
 
 #### Get All Templates
@@ -126,6 +137,7 @@ GET /api/templates/name/{name}
 ```http
 POST /api/templates
 Content-Type: application/json
+X-User: admin
 
 {
   "name": "welcome-email",
@@ -142,6 +154,7 @@ Content-Type: application/json
 ```http
 PUT /api/templates/{id}
 Content-Type: application/json
+X-User: john.doe
 
 {
   "name": "welcome-email",
@@ -157,6 +170,7 @@ Content-Type: application/json
 
 ```http
 DELETE /api/templates/{id}
+X-User: admin
 ```
 
 #### Process Template
@@ -196,6 +210,7 @@ GET /api/email-senders/name/{name}
 ```http
 POST /api/email-senders
 Content-Type: application/json
+X-User: admin
 
 {
   "name": "gmail",
@@ -216,6 +231,7 @@ Content-Type: application/json
 ```http
 PUT /api/email-senders/{id}
 Content-Type: application/json
+X-User: admin
 
 {
   "name": "gmail",
@@ -235,6 +251,7 @@ Content-Type: application/json
 
 ```http
 DELETE /api/email-senders/{id}
+X-User: admin
 ```
 
 ### Notifications
@@ -244,6 +261,7 @@ DELETE /api/email-senders/{id}
 ```http
 POST /api/notifications/email
 Content-Type: application/json
+X-User: system
 
 {
   "senderName": "gmail",
@@ -261,6 +279,7 @@ Content-Type: application/json
 ```http
 POST /api/notifications/email/template/welcome-email
 Content-Type: application/json
+X-User: system
 
 {
   "senderName": "gmail",
@@ -276,6 +295,7 @@ Content-Type: application/json
 ```http
 POST /api/notifications/whatsapp
 Content-Type: application/json
+X-User: system
 
 {
   "toNumber": "+1234567890",
@@ -291,6 +311,7 @@ Content-Type: application/json
 ```http
 POST /api/notifications/whatsapp/template/whatsapp-welcome
 Content-Type: application/json
+X-User: system
 
 {
   "toNumber": "+1234567890",
@@ -308,6 +329,42 @@ The service uses the following tables:
 - `email_senders`: Store SMTP configurations for different email providers
 - `notification_requests`: Track all notification requests
 - `notification_responses`: Store responses from notification providers
+
+### Audit Fields
+
+All entities include audit fields that are automatically populated:
+
+- `created_at`: Timestamp when the record was created
+- `modified_at`: Timestamp when the record was last modified
+- `created_by`: User who created the record (from user context)
+- `modified_by`: User who last modified the record (from user context)
+
+These fields are automatically managed by Spring Data JPA Auditing and the user context system.
+
+### User Context System
+
+The service includes a flexible user context system that supports:
+
+1. **HTTP Header**: Set `X-User: username` in request headers
+2. **Query Parameter**: Use `?user=username` in the URL
+3. **Default Fallback**: If no user is specified, defaults to "system"
+
+Example API responses include audit information:
+
+```json
+{
+  "id": 1,
+  "name": "welcome-email",
+  "type": "EMAIL",
+  "subject": "Welcome",
+  "content": "Hello {{name}}!",
+  "isActive": true,
+  "createdAt": "2024-01-15T10:30:00",
+  "modifiedAt": "2024-01-15T10:30:00",
+  "createdBy": "admin",
+  "modifiedBy": "john.doe"
+}
+```
 
 ## Template Variables
 
@@ -360,6 +417,12 @@ Configure your own SMTP server settings in the configuration.
 ./gradlew test
 ```
 
+### Testing Audit System
+
+```bash
+./test-audit-system.sh
+```
+
 ### Database Migrations
 
 The application uses Flyway for database migrations. Migrations are automatically applied on startup.
@@ -387,6 +450,7 @@ All errors are logged and appropriate HTTP status codes are returned.
 - Implement proper authentication and authorization
 - Regularly rotate API keys and passwords
 - Monitor and log all notification activities
+- Validate user context in production environments
 
 ## Production Deployment
 
@@ -396,3 +460,5 @@ All errors are logged and appropriate HTTP status codes are returned.
 4. Configure SSL/TLS for secure communication
 5. Set up backup and recovery procedures
 6. Monitor notification delivery rates and failures
+7. Implement proper user authentication and authorization
+8. Configure user context to use authenticated user information

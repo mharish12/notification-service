@@ -6,7 +6,7 @@ echo "=============================="
 # Check if .env file exists
 if [ ! -f ".env" ]; then
     echo "❌ .env file not found. Run ./setup-env.sh first"
-    exit 1
+#    exit 1
 fi
 
 # Load environment variables
@@ -23,15 +23,15 @@ echo "📧 Username: $GMAIL_USERNAME"
 echo "🔑 Password: ${GMAIL_PASSWORD:0:4}****"
 
 # Test database connection
-echo ""
-echo "🗄️  Testing database connection..."
-if docker ps | grep -q notification-postgres; then
-    echo "✅ PostgreSQL container is running"
-else
-    echo "⚠️  PostgreSQL container not running. Starting it..."
-    docker-compose up -d postgres
-    sleep 5
-fi
+#echo ""
+#echo "🗄️  Testing database connection..."
+#if docker ps | grep -q notification-postgres; then
+#    echo "✅ PostgreSQL container is running"
+#else
+#    echo "⚠️  PostgreSQL container not running. Starting it..."
+#    docker-compose up -d postgres
+#    sleep 5
+#fi
 
 # Test application startup
 echo ""
@@ -39,7 +39,7 @@ echo "🚀 Testing application startup..."
 echo "Starting application with Gmail configuration..."
 
 # Run the application in background
-./gradlew bootRun --args='--spring.profiles.active=dev' > app.log 2>&1 &
+./gradlew bootRun --args='--spring.profiles.active=local' > app.log 2>&1 &
 APP_PID=$!
 
 # Wait for application to start

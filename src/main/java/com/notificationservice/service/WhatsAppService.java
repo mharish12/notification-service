@@ -133,17 +133,25 @@ public class WhatsAppService {
     }
 
     private NotificationRequestDto convertToDto(NotificationRequest request) {
-        return new NotificationRequestDto(
-                request.getId(),
-                request.getTemplate() != null ? request.getTemplate().getId() : null,
-                request.getTemplate() != null ? request.getTemplate().getName() : null,
-                request.getSender() != null ? request.getSender().getId() : null,
-                request.getSender() != null ? request.getSender().getName() : null,
-                request.getRecipient(),
-                request.getSubject(),
-                request.getContent(),
-                request.getVariables(),
-                request.getStatus().name(),
-                request.getErrorMessage());
+        NotificationRequestDto dto = new NotificationRequestDto();
+        dto.setId(request.getId());
+        dto.setTemplateId(request.getTemplate() != null ? request.getTemplate().getId() : null);
+        dto.setTemplateName(request.getTemplate() != null ? request.getTemplate().getName() : null);
+        dto.setSenderId(request.getSender() != null ? request.getSender().getId() : null);
+        dto.setSenderName(request.getSender() != null ? request.getSender().getName() : null);
+        dto.setRecipient(request.getRecipient());
+        dto.setSubject(request.getSubject());
+        dto.setContent(request.getContent());
+        dto.setVariables(request.getVariables());
+        dto.setStatus(request.getStatus().name());
+        dto.setErrorMessage(request.getErrorMessage());
+
+        // Set audit fields
+        dto.setCreatedAt(request.getCreatedAt());
+        dto.setModifiedAt(request.getModifiedAt());
+        dto.setCreatedBy(request.getCreatedBy());
+        dto.setModifiedBy(request.getModifiedBy());
+
+        return dto;
     }
 }

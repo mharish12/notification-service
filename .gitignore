@@ -83,5 +83,5 @@ node_modules/
 .env.production.local
 
 # Application specific
-application-local.yml
+# application-local.yml
 application-prod.yml 

@@ -35,6 +35,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'com.twilio.sdk:twilio:9.14.1'
+    implementation 'org.springframework.statemachine:spring-statemachine-starter:3.2.1'
     
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

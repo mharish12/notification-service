@@ -2,6 +2,7 @@ package com.notificationservice.controller;
 
 import com.notificationservice.dto.NotificationRequestDto;
 import com.notificationservice.service.EmailService;
+import com.notificationservice.service.RuleEngineService;
 import com.notificationservice.service.WhatsAppService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,11 +19,29 @@ public class NotificationController {
 
     private final EmailService emailService;
     private final WhatsAppService whatsAppService;
+    private final RuleEngineService ruleEngineService;
 
     // Email endpoints
     @PostMapping("/email")
     public ResponseEntity<NotificationRequestDto> sendEmail(@RequestBody EmailRequest request) {
         try {
+            // Evaluate rules before sending
+            String userId = extractUserId(request.getVariables());
+            if (userId != null) {
+                RuleEngineService.RuleEvaluationResult result = ruleEngineService.evaluateRules(
+                        userId, request.getContent(), request.getVariables());
+
+                if (result.isBlocked()) {
+                    log.warn("Email blocked by rule for user: {}, reason: {}", userId, result.getBlockReason());
+                    return ResponseEntity.status(403).build();
+                }
+
+                // Update user stats if rules were applied
+                if (!result.getAppliedRules().isEmpty()) {
+                    ruleEngineService.updateUserStats(userId);
+                }
+            }
+
             NotificationRequestDto result = emailService.sendEmail(
                     request.getSenderName(),
                     request.getRecipient(),
@@ -40,6 +59,24 @@ public class NotificationController {
             @PathVariable String templateName,
             @RequestBody TemplateEmailRequest request) {
         try {
+            // Evaluate rules before sending
+            String userId = extractUserId(request.getVariables());
+            if (userId != null) {
+                RuleEngineService.RuleEvaluationResult result = ruleEngineService.evaluateRules(
+                        userId, "Template: " + templateName, request.getVariables());
+
+                if (result.isBlocked()) {
+                    log.warn("Email template blocked by rule for user: {}, reason: {}", userId,
+                            result.getBlockReason());
+                    return ResponseEntity.status(403).build();
+                }
+
+                // Update user stats if rules were applied
+                if (!result.getAppliedRules().isEmpty()) {
+                    ruleEngineService.updateUserStats(userId);
+                }
+            }
+
             NotificationRequestDto result = emailService.sendEmailWithTemplate(
                     request.getSenderName(),
                     templateName,
@@ -55,6 +92,23 @@ public class NotificationController {
     @PostMapping("/whatsapp")
     public ResponseEntity<NotificationRequestDto> sendWhatsApp(@RequestBody WhatsAppRequest request) {
         try {
+            // Evaluate rules before sending
+            String userId = extractUserId(request.getVariables());
+            if (userId != null) {
+                RuleEngineService.RuleEvaluationResult result = ruleEngineService.evaluateRules(
+                        userId, request.getContent(), request.getVariables());
+
+                if (result.isBlocked()) {
+                    log.warn("WhatsApp blocked by rule for user: {}, reason: {}", userId, result.getBlockReason());
+                    return ResponseEntity.status(403).build();
+                }
+
+                // Update user stats if rules were applied
+                if (!result.getAppliedRules().isEmpty()) {
+                    ruleEngineService.updateUserStats(userId);
+                }
+            }
+
             NotificationRequestDto result = whatsAppService.sendWhatsAppMessage(
                     request.getToNumber(),
                     request.getContent(),
@@ -70,6 +124,24 @@ public class NotificationController {
             @PathVariable String templateName,
             @RequestBody TemplateWhatsAppRequest request) {
         try {
+            // Evaluate rules before sending
+            String userId = extractUserId(request.getVariables());
+            if (userId != null) {
+                RuleEngineService.RuleEvaluationResult result = ruleEngineService.evaluateRules(
+                        userId, "Template: " + templateName, request.getVariables());
+
+                if (result.isBlocked()) {
+                    log.warn("WhatsApp template blocked by rule for user: {}, reason: {}", userId,
+                            result.getBlockReason());
+                    return ResponseEntity.status(403).build();
+                }
+
+                // Update user stats if rules were applied
+                if (!result.getAppliedRules().isEmpty()) {
+                    ruleEngineService.updateUserStats(userId);
+                }
+            }
+
             NotificationRequestDto result = whatsAppService.sendWhatsAppWithTemplate(
                     templateName,
                     request.getToNumber(),
@@ -78,6 +150,16 @@ public class NotificationController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    /**
+     * Extract user ID from variables or use recipient as fallback
+     */
+    private String extractUserId(Map<String, Object> variables) {
+        if (variables != null && variables.containsKey("userId")) {
+            return variables.get("userId").toString();
+        }
+        return null;
     }
 
     // Request classes

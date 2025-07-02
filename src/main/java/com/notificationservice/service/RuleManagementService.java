@@ -6,6 +6,7 @@ import com.notificationservice.entity.NotificationRule;
 import com.notificationservice.entity.NotificationTemplate;
 import com.notificationservice.repository.NotificationRuleRepository;
 import com.notificationservice.repository.NotificationTemplateRepository;
+import com.notificationservice.mapper.NotificationRuleMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,20 +29,14 @@ public class RuleManagementService {
      * Get all rules for a user
      */
     public List<NotificationRuleDto> getRulesByUserId(String userId) {
-        return ruleRepository.findByUserIdAndIsActiveTrueOrderByPriorityDesc(userId)
-                .stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return NotificationRuleMapper.toDtoList(ruleRepository.findByUserIdAndIsActiveTrueOrderByPriorityDesc(userId));
     }
 
     /**
      * Get all active rules
      */
     public List<NotificationRuleDto> getAllActiveRules() {
-        return ruleRepository.findByIsActiveTrueOrderByUserIdAscPriorityDesc()
-                .stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return NotificationRuleMapper.toDtoList(ruleRepository.findByIsActiveTrueOrderByUserIdAscPriorityDesc());
     }
 
     /**
@@ -49,7 +44,7 @@ public class RuleManagementService {
      */
     public Optional<NotificationRuleDto> getRuleById(Long id) {
         return ruleRepository.findById(id)
-                .map(this::convertToDto);
+                .map(NotificationRuleMapper::toDto);
     }
 
     /**
@@ -57,27 +52,23 @@ public class RuleManagementService {
      */
     public Optional<NotificationRuleDto> getRuleByNameAndUserId(String name, String userId) {
         return ruleRepository.findByNameAndUserIdAndIsActiveTrue(name, userId)
-                .map(this::convertToDto);
+                .map(NotificationRuleMapper::toDto);
     }
 
     /**
      * Get rules by notification type for a user
      */
     public List<NotificationRuleDto> getRulesByNotificationType(String userId, NotificationRule.NotificationType type) {
-        return ruleRepository.findByUserIdAndNotificationTypeAndIsActiveTrueOrderByPriorityDesc(userId, type)
-                .stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return NotificationRuleMapper.toDtoList(
+                ruleRepository.findByUserIdAndNotificationTypeAndIsActiveTrueOrderByPriorityDesc(userId, type));
     }
 
     /**
      * Get rules by rule type for a user
      */
     public List<NotificationRuleDto> getRulesByRuleType(String userId, NotificationRule.RuleType type) {
-        return ruleRepository.findByUserIdAndRuleTypeAndIsActiveTrueOrderByPriorityDesc(userId, type)
-                .stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return NotificationRuleMapper
+                .toDtoList(ruleRepository.findByUserIdAndRuleTypeAndIsActiveTrueOrderByPriorityDesc(userId, type));
     }
 
     /**
@@ -98,11 +89,18 @@ public class RuleManagementService {
                     "Rule with name '" + ruleDto.getName() + "' already exists for user: " + ruleDto.getUserId());
         }
 
-        NotificationRule rule = convertToEntity(ruleDto);
+        NotificationRule rule = NotificationRuleMapper.toEntity(ruleDto);
+        // Set template if provided
+        if (ruleDto.getTemplateId() != null) {
+            NotificationTemplate template = templateRepository.findById(ruleDto.getTemplateId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Template not found with ID: " + ruleDto.getTemplateId()));
+            rule.setTemplate(template);
+        }
         rule = ruleRepository.save(rule);
 
         log.info("Created rule: {} for user: {}", rule.getName(), rule.getUserId());
-        return convertToDto(rule);
+        return NotificationRuleMapper.toDto(rule);
     }
 
     /**
@@ -128,23 +126,7 @@ public class RuleManagementService {
         }
 
         // Update fields
-        existingRule.setName(ruleDto.getName());
-        existingRule.setDescription(ruleDto.getDescription());
-        existingRule.setUserId(ruleDto.getUserId());
-        existingRule.setRuleType(ruleDto.getRuleType());
-        existingRule.setNotificationType(ruleDto.getNotificationType());
-        existingRule.setIsActive(ruleDto.getIsActive());
-        existingRule.setPriority(ruleDto.getPriority());
-        existingRule.setDaysOfWeek(ruleDto.getDaysOfWeek());
-        existingRule.setStartTime(ruleDto.getStartTime());
-        existingRule.setEndTime(ruleDto.getEndTime());
-        existingRule.setTimezone(ruleDto.getTimezone());
-        existingRule.setMaxNotificationsPerDay(ruleDto.getMaxNotificationsPerDay());
-        existingRule.setMinIntervalMinutes(ruleDto.getMinIntervalMinutes());
-        existingRule.setConditions(ruleDto.getConditions());
-        existingRule.setVariables(ruleDto.getVariables());
-        existingRule.setActionType(ruleDto.getActionType());
-        existingRule.setActionConfig(ruleDto.getActionConfig());
+        NotificationRuleMapper.updateEntityFromDto(existingRule, ruleDto);
 
         // Update template if provided
         if (ruleDto.getTemplateId() != null) {
@@ -159,7 +141,7 @@ public class RuleManagementService {
         existingRule = ruleRepository.save(existingRule);
 
         log.info("Updated rule: {} for user: {}", existingRule.getName(), existingRule.getUserId());
-        return convertToDto(existingRule);
+        return NotificationRuleMapper.toDto(existingRule);
     }
 
     /**
@@ -186,7 +168,7 @@ public class RuleManagementService {
         rule = ruleRepository.save(rule);
 
         log.info("Activated rule: {} for user: {}", rule.getName(), rule.getUserId());
-        return convertToDto(rule);
+        return NotificationRuleMapper.toDto(rule);
     }
 
     /**
@@ -200,7 +182,7 @@ public class RuleManagementService {
         rule = ruleRepository.save(rule);
 
         log.info("Deactivated rule: {} for user: {}", rule.getName(), rule.getUserId());
-        return convertToDto(rule);
+        return NotificationRuleMapper.toDto(rule);
     }
 
     /**
@@ -214,90 +196,20 @@ public class RuleManagementService {
         rule = ruleRepository.save(rule);
 
         log.info("Updated priority for rule: {} to {}", rule.getName(), priority);
-        return convertToDto(rule);
+        return NotificationRuleMapper.toDto(rule);
     }
 
     /**
      * Get rules by template
      */
     public List<NotificationRuleDto> getRulesByTemplate(Long templateId) {
-        return ruleRepository.findByTemplateIdAndIsActiveTrue(templateId)
-                .stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return NotificationRuleMapper.toDtoList(ruleRepository.findByTemplateIdAndIsActiveTrue(templateId));
     }
 
     /**
      * Get rules by action type
      */
     public List<NotificationRuleDto> getRulesByActionType(String actionType) {
-        return ruleRepository.findByActionTypeAndIsActiveTrue(actionType)
-                .stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-    }
-
-    private NotificationRuleDto convertToDto(NotificationRule rule) {
-        NotificationRuleDto dto = new NotificationRuleDto();
-        dto.setId(rule.getId());
-        dto.setName(rule.getName());
-        dto.setDescription(rule.getDescription());
-        dto.setUserId(rule.getUserId());
-        dto.setTemplateId(rule.getTemplate() != null ? rule.getTemplate().getId() : null);
-        dto.setTemplateName(rule.getTemplate() != null ? rule.getTemplate().getName() : null);
-        dto.setRuleType(rule.getRuleType());
-        dto.setNotificationType(rule.getNotificationType());
-        dto.setIsActive(rule.getIsActive());
-        dto.setPriority(rule.getPriority());
-        dto.setDaysOfWeek(rule.getDaysOfWeek());
-        dto.setStartTime(rule.getStartTime());
-        dto.setEndTime(rule.getEndTime());
-        dto.setTimezone(rule.getTimezone());
-        dto.setMaxNotificationsPerDay(rule.getMaxNotificationsPerDay());
-        dto.setMinIntervalMinutes(rule.getMinIntervalMinutes());
-        dto.setConditions(rule.getConditions());
-        dto.setVariables(rule.getVariables());
-        dto.setActionType(rule.getActionType());
-        dto.setActionConfig(rule.getActionConfig());
-
-        // Set audit fields
-        dto.setCreatedAt(rule.getCreatedAt());
-        dto.setModifiedAt(rule.getModifiedAt());
-        dto.setCreatedBy(rule.getCreatedBy());
-        dto.setModifiedBy(rule.getModifiedBy());
-
-        return dto;
-    }
-
-    private NotificationRule convertToEntity(NotificationRuleDto dto) {
-        NotificationRule rule = new NotificationRule();
-        rule.setId(dto.getId());
-        rule.setName(dto.getName());
-        rule.setDescription(dto.getDescription());
-        rule.setUserId(dto.getUserId());
-        rule.setRuleType(dto.getRuleType());
-        rule.setNotificationType(dto.getNotificationType());
-        rule.setIsActive(dto.getIsActive());
-        rule.setPriority(dto.getPriority());
-        rule.setDaysOfWeek(dto.getDaysOfWeek());
-        rule.setStartTime(dto.getStartTime());
-        rule.setEndTime(dto.getEndTime());
-        rule.setTimezone(dto.getTimezone());
-        rule.setMaxNotificationsPerDay(dto.getMaxNotificationsPerDay());
-        rule.setMinIntervalMinutes(dto.getMinIntervalMinutes());
-        rule.setConditions(dto.getConditions());
-        rule.setVariables(dto.getVariables());
-        rule.setActionType(dto.getActionType());
-        rule.setActionConfig(dto.getActionConfig());
-
-        // Set template if provided
-        if (dto.getTemplateId() != null) {
-            NotificationTemplate template = templateRepository.findById(dto.getTemplateId())
-                    .orElseThrow(
-                            () -> new IllegalArgumentException("Template not found with ID: " + dto.getTemplateId()));
-            rule.setTemplate(template);
-        }
-
-        return rule;
+        return NotificationRuleMapper.toDtoList(ruleRepository.findByActionTypeAndIsActiveTrue(actionType));
     }
 }

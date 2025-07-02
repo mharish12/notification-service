@@ -1,9 +1,9 @@
 package com.notificationservice.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.notificationservice.dto.NotificationTemplateDto;
 import com.notificationservice.entity.NotificationTemplate;
 import com.notificationservice.repository.NotificationTemplateRepository;
+import com.notificationservice.mapper.NotificationTemplateMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,27 +23,21 @@ public class TemplateService {
     private final NotificationTemplateRepository templateRepository;
 
     public List<NotificationTemplateDto> getAllTemplates() {
-        return templateRepository.findByIsActiveTrue()
-                .stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return NotificationTemplateMapper.toDtoList(templateRepository.findByIsActiveTrue());
     }
 
     public List<NotificationTemplateDto> getTemplatesByType(NotificationTemplate.NotificationType type) {
-        return templateRepository.findByTypeAndIsActiveTrue(type)
-                .stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return NotificationTemplateMapper.toDtoList(templateRepository.findByTypeAndIsActiveTrue(type));
     }
 
     public Optional<NotificationTemplateDto> getTemplateById(Long id) {
         return templateRepository.findById(id)
-                .map(this::convertToDto);
+                .map(NotificationTemplateMapper::toDto);
     }
 
     public Optional<NotificationTemplateDto> getTemplateByName(String name) {
         return templateRepository.findByNameAndIsActiveTrue(name)
-                .map(this::convertToDto);
+                .map(NotificationTemplateMapper::toDto);
     }
 
     public NotificationTemplateDto createTemplate(NotificationTemplateDto templateDto) {
@@ -51,9 +45,9 @@ public class TemplateService {
             throw new IllegalArgumentException("Template with name '" + templateDto.getName() + "' already exists");
         }
 
-        NotificationTemplate template = convertToEntity(templateDto);
+        NotificationTemplate template = NotificationTemplateMapper.toEntity(templateDto);
         template = templateRepository.save(template);
-        return convertToDto(template);
+        return NotificationTemplateMapper.toDto(template);
     }
 
     public NotificationTemplateDto updateTemplate(Long id, NotificationTemplateDto templateDto) {
@@ -66,15 +60,11 @@ public class TemplateService {
             throw new IllegalArgumentException("Template with name '" + templateDto.getName() + "' already exists");
         }
 
-        existingTemplate.setName(templateDto.getName());
-        existingTemplate.setType(templateDto.getType());
-        existingTemplate.setSubject(templateDto.getSubject());
-        existingTemplate.setContent(templateDto.getContent());
-        existingTemplate.setVariables(templateDto.getVariables());
-        existingTemplate.setIsActive(templateDto.getIsActive());
+        // Update fields
+        NotificationTemplateMapper.updateEntityFromDto(existingTemplate, templateDto);
 
         existingTemplate = templateRepository.save(existingTemplate);
-        return convertToDto(existingTemplate);
+        return NotificationTemplateMapper.toDto(existingTemplate);
     }
 
     public void deleteTemplate(Long id) {
@@ -101,37 +91,5 @@ public class TemplateService {
         }
 
         return processedContent;
-    }
-
-    private NotificationTemplateDto convertToDto(NotificationTemplate template) {
-        NotificationTemplateDto dto = new NotificationTemplateDto();
-        dto.setId(template.getId());
-        dto.setName(template.getName());
-        dto.setType(template.getType());
-        dto.setSubject(template.getSubject());
-        dto.setContent(template.getContent());
-        dto.setVariables(template.getVariables());
-        dto.setIsActive(template.getIsActive());
-
-        // Set audit fields
-        dto.setCreatedAt(template.getCreatedAt());
-        dto.setModifiedAt(template.getModifiedAt());
-        dto.setCreatedBy(template.getCreatedBy());
-        dto.setModifiedBy(template.getModifiedBy());
-
-        return dto;
-    }
-
-    private NotificationTemplate convertToEntity(NotificationTemplateDto dto) {
-        NotificationTemplate template = new NotificationTemplate();
-        template.setId(dto.getId());
-        template.setName(dto.getName());
-        template.setType(dto.getType());
-        template.setSubject(dto.getSubject());
-        template.setContent(dto.getContent());
-        template.setVariables(dto.getVariables());
-        template.setIsActive(dto.getIsActive());
-
-        return template;
     }
 }

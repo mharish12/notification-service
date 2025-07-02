@@ -41,8 +41,10 @@ public class NotificationRuleDto extends BaseAuditableDto {
     @NotNull(message = "Notification type is required")
     private NotificationRule.NotificationType notificationType;
 
+    @Builder.Default
     private Boolean isActive = true;
 
+    @Builder.Default
     private Integer priority = 0;
 
     // Time-based conditions
@@ -52,6 +54,7 @@ public class NotificationRuleDto extends BaseAuditableDto {
 
     private LocalTime endTime;
 
+    @Builder.Default
     private String timezone = "UTC";
 
     // Frequency conditions
@@ -65,6 +68,7 @@ public class NotificationRuleDto extends BaseAuditableDto {
     private JsonNode variables;
 
     // Action settings
+    @Builder.Default
     private String actionType = "SEND_NOTIFICATION";
 
     private JsonNode actionConfig;

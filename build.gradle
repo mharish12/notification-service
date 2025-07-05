@@ -36,6 +36,14 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'com.twilio.sdk:twilio:9.14.1'
     implementation 'org.springframework.statemachine:spring-statemachine-starter:3.2.1'
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.2.0'
+    implementation 'io.github.resilience4j:resilience4j-ratelimiter:2.2.0'
+    implementation 'io.github.resilience4j:resilience4j-all:2.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    
+    // MapStruct for object mapping
+    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
     
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

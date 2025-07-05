@@ -80,3 +80,27 @@ logging:
   level:
     com.notificationservice: DEBUG
     org.springframework.mail: DEBUG
+
+# Rate Limiter Configuration
+rate-limiter:
+  enabled: true
+  create:
+    max-requests: 10
+    window-minutes: 1
+    timeout-seconds: 5
+  read:
+    max-requests: 100
+    window-minutes: 1
+    timeout-seconds: 2
+  redirect:
+    max-requests: 500
+    window-minutes: 1
+    timeout-seconds: 1
+  analytics:
+    max-requests: 30
+    window-minutes: 1
+    timeout-seconds: 3
+  admin:
+    max-requests: 20
+    window-minutes: 1
+    timeout-seconds: 5
